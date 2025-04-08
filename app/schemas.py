@@ -27,7 +27,7 @@ class SecretLogResponse(BaseModel):
     action: str
     ip_address: str
     created_at: datetime
-    metadata: Optional[str] = None
+    log_metadata: Optional[str] = None
 
     class Config:
         from_attributes = True 

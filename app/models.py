@@ -27,4 +27,4 @@ class SecretLog(Base):
     action = Column(String)  # create, read, delete
     ip_address = Column(String)
     created_at = Column(DateTime, default=func.now())
-    metadata = Column(Text, nullable=True)  # JSON string with additional data 
+    log_metadata = Column(Text, nullable=True)  # JSON string with additional data 

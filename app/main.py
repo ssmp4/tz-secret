@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 import uuid
@@ -15,6 +15,16 @@ from app.config import get_settings
 app = FastAPI(title="Secret Service", description="Сервис для хранения одноразовых секретов")
 
 settings = get_settings()
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/docs")
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 
 @app.middleware("http")
@@ -66,7 +76,7 @@ async def create_secret(
         secret_id=db_secret.id,
         action="create",
         ip_address=request.client.host,
-        metadata=json.dumps({
+        log_metadata=json.dumps({
             "ttl_seconds": secret_data.ttl_seconds,
             "has_passphrase": bool(secret_data.passphrase)
         })
@@ -123,8 +133,8 @@ async def read_secret(
 @app.delete("/secret/{secret_key}", response_model=schemas.SecretDeleteResponse)
 async def delete_secret(
     secret_key: str,
-    passphrase: Optional[str] = None,
     request: Request,
+    passphrase: Optional[str] = None,
     db: Session = Depends(get_db),
     redis_client=Depends(get_redis)
 ):
@@ -152,7 +162,7 @@ async def delete_secret(
         secret_id=db_secret.id,
         action="delete",
         ip_address=request.client.host,
-        metadata=json.dumps({"used_passphrase": bool(passphrase)})
+        log_metadata=json.dumps({"used_passphrase": bool(passphrase)})
     )
     db.add(log_entry)
     db.commit()
